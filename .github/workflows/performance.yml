@@ -77,7 +77,7 @@ jobs:
                --csv=performance-results
     
     - name: Upload performance results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: api-performance-results
         path: |
@@ -120,7 +120,7 @@ jobs:
         lhci autorun --config=frontend/lighthouserc.json
     
     - name: Upload Lighthouse results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lighthouse-results
         path: .lighthouseci/
@@ -164,7 +164,7 @@ jobs:
         python db_performance_tests.py
     
     - name: Upload database performance results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: database-performance-results
         path: backend/tests/performance/db-performance-*.json
@@ -194,7 +194,7 @@ jobs:
                load_test.js
     
     - name: Upload load test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: load-test-results
         path: backend/tests/performance/load-test-results.json
@@ -240,7 +240,7 @@ jobs:
         python -m memory_profiler tests/performance/memory_profile.py > memory-profile.txt
     
     - name: Upload memory profile results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: memory-profile-results
         path: backend/memory-profile.txt
