@@ -10,6 +10,15 @@ import {
 } from '@heroicons/react/24/outline';
 
 const AIInsights: React.FC = () => {
+  const [predictions, setPredictions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modelMetrics, setModelMetrics] = useState({
+    accuracy: 0,
+    sharpeRatio: 0,
+    totalPredictions: 0,
+    successfulTrades: 0
+  });
+
   // Fetch real predictions and metrics on component mount
   useEffect(() => {
     fetchAIInsights();
@@ -100,15 +109,6 @@ const AIInsights: React.FC = () => {
       console.error('Failed to run backtest:', error);
     }
   };
-  const [predictions, setPredictions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const [modelMetrics, setModelMetrics] = useState({
-    accuracy: 0,
-    sharpeRatio: 0,
-    totalPredictions: 0,
-    successfulTrades: 0
-  });
 
   return (
     <Layout>

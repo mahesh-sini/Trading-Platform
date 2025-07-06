@@ -392,5 +392,3 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
     </div>
   );
 };
-
-export default StockSearchInput;
