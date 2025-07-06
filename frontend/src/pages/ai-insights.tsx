@@ -4,13 +4,22 @@ import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
   CpuChipIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  // TrendingUpIcon,
+  // TrendingDownIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
 
+interface Prediction {
+  symbol: string;
+  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  target: number;
+  timeframe: string;
+  reasoning: string;
+}
+
 const AIInsights: React.FC = () => {
-  const [predictions, setPredictions] = useState([]);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [modelMetrics, setModelMetrics] = useState({
     accuracy: 0,
@@ -197,7 +206,7 @@ const AIInsights: React.FC = () => {
                     <strong>Reasoning:</strong> {pred.reasoning}
                   </div>
                 </div>
-              )))
+              ))
               )}
             </div>
           </CardBody>

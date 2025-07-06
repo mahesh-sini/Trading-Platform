@@ -57,77 +57,24 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
         } else if (exchanges && exchanges.length > 0) {
           params.append('exchanges', exchanges.join(','));
         }
-        
-        // Call comprehensive stock search API
+
         const response = await fetch(`/api/stocks/search?${params}`);
         
-        if (!response.ok) {
-          throw new Error('Stock search API failed');
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.results) {
-          // Transform API results to component format
-          const transformedResults: Stock[] = data.results.map((item: any) => ({
-            symbol: item.symbol,
-            name: item.name,
-            exchange: item.exchange as 'NSE' | 'BSE' | 'NYSE' | 'NASDAQ',
-            sector: item.sector,
-            market_cap: item.market_cap,
-            description: `${item.segment}${item.sector ? ' • ' + item.sector : ''}`,
-            // Additional fields from comprehensive API
-            listing_date: item.listing_date,
-            price: undefined, // Will be fetched separately if needed
-            change: undefined,
-            changePercent: undefined,
-            volume: undefined,
-            last_updated: undefined,
-            // Financial data
-            pe_ratio: item.pe_ratio,
-            pb_ratio: item.pb_ratio,
-            dividend_yield: item.dividend_yield,
-            beta: item.beta,
-            debt_to_equity: item.debt_to_equity,
-            roe: item.roe,
-            roa: item.roa,
-            earnings_growth: item.earnings_growth,
-            revenue_growth: item.revenue_growth,
-            book_value: item.book_value,
-            dividend_per_share: item.dividend_per_share,
-            last_dividend_date: item.last_dividend_date,
-            bonus_ratio: item.bonus_ratio,
-            split_ratio: item.split_ratio,
-            face_value: item.face_value,
-            // Enhanced metadata
-            is_fo_enabled: item.is_fo_enabled,
-            is_etf: item.is_etf,
-            is_index: item.is_index,
-            lot_size: item.lot_size,
-            tick_size: item.tick_size
-          }));
-          
-          setSuggestions(transformedResults);
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestions(data.stocks || []);
         } else {
+          console.error('Failed to fetch stock suggestions');
           setSuggestions([]);
         }
       } catch (error) {
-        console.error('Stock search error:', error);
-        
-        // Fallback to mock data if API fails
-        const mockResults: Stock[] = [
-          {
-            symbol: searchQuery.toUpperCase(),
-            name: `${searchQuery} Company Limited`,
-            exchange: 'NSE'
-          }
-        ];
-        setSuggestions(mockResults);
+        console.error('Error searching stocks:', error);
+        setSuggestions([]);
       } finally {
         setIsLoading(false);
       }
     }, 300),
-    [exchanges, selectedExchange]
+    [selectedExchange, exchanges]
   );
 
   // Handle input change
@@ -152,19 +99,19 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex((prev) => 
+        setHighlightedIndex(prev => 
           prev < suggestions.length - 1 ? prev + 1 : 0
         );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setHighlightedIndex((prev) => 
+        setHighlightedIndex(prev => 
           prev > 0 ? prev - 1 : suggestions.length - 1
         );
         break;
       case 'Enter':
         e.preventDefault();
-        if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+        if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
           handleStockSelect(suggestions[highlightedIndex]);
         }
         break;
@@ -192,7 +139,7 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
   };
 
   // Handle exchange filter change
-  const handleExchangeChange = (exchange: 'ALL' | 'NSE' | 'BSE') => {
+  const handleExchangeChange = (exchange: 'ALL' | 'NSE' | 'BSE' | 'NYSE' | 'NASDAQ') => {
     setSelectedExchange(exchange);
     if (query.length >= 2) {
       debouncedSearch(query);
@@ -328,11 +275,6 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
                           <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
                             {stock.exchange}
                           </span>
-                          {stock.is_fo_enabled && (
-                            <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">
-                              F&O
-                            </span>
-                          )}
                         </div>
                         <div className="text-sm text-gray-600 mt-1">{stock.name}</div>
                         {stock.sector && (
@@ -341,16 +283,15 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
                       </div>
                       
                       {/* Price Information */}
-                      {stock.price && (
-                        <div className="text-right">
-                          <div className="font-semibold text-gray-900">₹{stock.price.toFixed(2)}</div>
-                          {stock.change !== undefined && stock.changePercent !== undefined && (
-                            <div className="mt-1">
-                              {formatPriceChange(stock.change, stock.changePercent)}
-                            </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900">₹{stock.price?.toFixed(2) || 'N/A'}</div>
+                        {stock.change && stock.changePercent && (
+                          <div className="mt-1">
+                            {formatPriceChange(stock.change, stock.changePercent)}
+                          </div>
                         )}
                       </div>
-                    )}
+                    </div>
                     
                     {/* Financial Metrics Row */}
                     {(stock.pe_ratio || stock.dividend_yield || stock.market_cap) && (
@@ -392,3 +333,5 @@ const StockSearchInput: React.FC<StockSearchInputProps> = ({
     </div>
   );
 };
+
+export default StockSearchInput;
