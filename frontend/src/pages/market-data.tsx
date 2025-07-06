@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout } from '@/components/layout/Layout';
-import RealTimeQuote from '@/components/market/RealTimeQuote';
+import { RealTimeQuote } from '@/components/market/RealTimeQuote';
 
 const MarketData: React.FC = () => {
   const symbols = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'KOTAKBANK'];

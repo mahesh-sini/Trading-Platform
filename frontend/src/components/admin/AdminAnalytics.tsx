@@ -20,7 +20,7 @@ import {
   TableRow,
   Chip,
   IconButton,
-  Tooltip,
+  // Tooltip,
   Alert,
   CircularProgress,
   Tab,
@@ -29,6 +29,7 @@ import {
   AccordionSummary,
   AccordionDetails
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   TrendingUp,
   TrendingDown,
@@ -59,10 +60,6 @@ import {
   ComposedChart,
   Legend
 } from 'recharts';
-import { useTheme } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 // Types
 interface AnalyticsData {
@@ -117,6 +114,15 @@ const AdminAnalytics: React.FC = () => {
     start: null,
     end: null
   });
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
 
   useEffect(() => {
     loadAnalyticsData();
@@ -179,14 +185,6 @@ const AdminAnalytics: React.FC = () => {
     return ((current - previous) / previous) * 100;
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;

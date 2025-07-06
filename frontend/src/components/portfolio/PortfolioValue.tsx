@@ -7,7 +7,7 @@ import {
   ArrowUpIcon, 
   ArrowDownIcon,
   CurrencyDollarIcon,
-  TrendingUpIcon
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 
@@ -146,7 +146,7 @@ export const PortfolioValue: React.FC<PortfolioValueProps> = ({ portfolio, class
           <div className="bg-white p-4 rounded-lg border">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <TrendingUpIcon className="w-5 h-5 text-primary-600" />
+                <ChartBarIcon className="w-5 h-5 text-primary-600" />
                 <span className="text-sm text-gray-600">Total Return</span>
               </div>
               <div className={clsx(

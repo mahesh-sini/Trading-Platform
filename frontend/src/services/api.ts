@@ -5,7 +5,7 @@
 
 interface ApiResponse<T = any> {
   success: boolean;
-  data: T;
+  data: T | null;
   message: string;
   error?: string;
 }

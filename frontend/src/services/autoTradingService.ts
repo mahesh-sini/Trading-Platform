@@ -1,4 +1,4 @@
-import { apiService } from './api';
+import { apiClient } from './api';
 
 export interface AutoTradingStatus {
   enabled: boolean;
@@ -79,22 +79,22 @@ class AutoTradingService {
   private readonly basePath = '/v1/auto-trading';
 
   async getStatus(): Promise<AutoTradingStatus> {
-    const response = await apiService.get(`${this.basePath}/status`);
+    const response = await apiClient.get(`${this.basePath}/status`);
     return response.data;
   }
 
   async enable(settings: AutoTradingSettings): Promise<{ message: string; enabled: boolean; mode: string }> {
-    const response = await apiService.post(`${this.basePath}/enable`, settings);
+    const response = await apiClient.post(`${this.basePath}/enable`, settings);
     return response.data;
   }
 
   async disable(): Promise<{ message: string; enabled: boolean }> {
-    const response = await apiService.post(`${this.basePath}/disable`);
+    const response = await apiClient.post(`${this.basePath}/disable`);
     return response.data;
   }
 
   async updateSettings(settings: AutoTradingSettings): Promise<{ message: string; enabled: boolean; mode: string }> {
-    const response = await apiService.put(`${this.basePath}/settings`, settings);
+    const response = await apiClient.put(`${this.basePath}/settings`, settings);
     return response.data;
   }
 
@@ -108,28 +108,28 @@ class AutoTradingService {
     if (params.start_date) queryParams.append('start_date', params.start_date);
     if (params.end_date) queryParams.append('end_date', params.end_date);
 
-    const response = await apiService.get(`${this.basePath}/trades?${queryParams.toString()}`);
+    const response = await apiClient.get(`${this.basePath}/trades?${queryParams.toString()}`);
     return response.data;
   }
 
   async getAnalytics(days: number = 30): Promise<AutoTradingAnalytics> {
-    const response = await apiService.get(`${this.basePath}/analytics?days=${days}`);
+    const response = await apiClient.get(`${this.basePath}/analytics?days=${days}`);
     return response.data;
   }
 
   async getMarketStatus(): Promise<MarketStatus> {
-    const response = await apiService.get(`${this.basePath}/market-status`);
+    const response = await apiClient.get(`${this.basePath}/market-status`);
     return response.data;
   }
 
   // Manual intervention methods
   async emergencyStop(reason: string = 'Manual intervention'): Promise<{ message: string; status: string }> {
-    const response = await apiService.post(`${this.basePath}/emergency-stop`, { reason });
+    const response = await apiClient.post(`${this.basePath}/emergency-stop`, { reason });
     return response.data;
   }
 
   async pauseTrading(durationMinutes: number = 30, reason: string = 'Manual pause'): Promise<{ message: string; status: string }> {
-    const response = await apiService.post(`${this.basePath}/pause`, {
+    const response = await apiClient.post(`${this.basePath}/pause`, {
       duration_minutes: durationMinutes,
       reason
     });
@@ -137,7 +137,7 @@ class AutoTradingService {
   }
 
   async resumeTrading(): Promise<{ message: string; status: string }> {
-    const response = await apiService.post(`${this.basePath}/resume`);
+    const response = await apiClient.post(`${this.basePath}/resume`);
     return response.data;
   }
 }

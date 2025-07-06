@@ -1,4 +1,4 @@
-import { apiService } from './api';
+import { apiClient } from './api';
 
 export interface ReportSummary {
   period_start: string;
@@ -121,7 +121,7 @@ class ReportsService {
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
 
-    const response = await apiService.get(
+    const response = await apiClient.get(
       `${this.basePath}/auto-trades/summary?${params.toString()}`
     );
     return response.data;
@@ -130,7 +130,7 @@ class ReportsService {
   async getDetailedAutoTradesReport(
     filters: ReportFilters
   ): Promise<DetailedTradeReport> {
-    const response = await apiService.post(
+    const response = await apiClient.post(
       `${this.basePath}/auto-trades/detailed`,
       filters
     );
@@ -145,14 +145,11 @@ class ReportsService {
     if (params.symbols) queryParams.append('symbols', params.symbols);
     if (params.status) queryParams.append('status', params.status);
 
-    const response = await apiService.get(
-      `${this.basePath}/auto-trades/export?${queryParams.toString()}`,
-      {
-        responseType: 'blob'
-      }
+    const response = await apiClient.get(
+      `${this.basePath}/auto-trades/export?${queryParams.toString()}`
     );
 
-    // Handle file download
+    // Handle file download - assume response.data is already the correct format
     const blob = new Blob([response.data]);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -172,14 +169,14 @@ class ReportsService {
     const params = new URLSearchParams();
     if (tradeDate) params.append('trade_date', tradeDate);
 
-    const response = await apiService.get(
+    const response = await apiClient.get(
       `${this.basePath}/eod-summary?${params.toString()}`
     );
     return response.data;
   }
 
   async getPerformanceMetrics(periodDays: number = 30): Promise<PerformanceMetrics> {
-    const response = await apiService.get(
+    const response = await apiClient.get(
       `${this.basePath}/performance-metrics?period_days=${periodDays}`
     );
     return response.data;

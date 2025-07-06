@@ -1,7 +1,7 @@
 import React from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
-import Layout from '../components/layout/Layout';
+import { Layout } from '../components/layout/Layout';
 import AutoTradingDashboard from '../components/auto-trading/AutoTradingDashboard';
 
 const AutoTradingPage: NextPage = () => {
