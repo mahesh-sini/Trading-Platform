@@ -1,0 +1,246 @@
+name: Performance Testing
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'  # Weekly on Monday at 4 AM
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      duration:
+        description: 'Test duration (minutes)'
+        required: true
+        default: '10'
+        type: string
+
+jobs:
+  # API Performance Tests
+  api-performance:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_USER: testuser
+          POSTGRES_DB: trading_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        pip install locust
+    
+    - name: Start API server
+      run: |
+        cd backend
+        export DATABASE_URL=postgresql://testuser:testpass@localhost:5432/trading_test
+        export REDIS_URL=redis://localhost:6379
+        export SECRET_KEY=test-secret-key
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Run Locust performance tests
+      run: |
+        cd backend/tests/performance
+        locust -f locustfile.py --host=http://localhost:8000 \
+               --users=100 --spawn-rate=10 \
+               --run-time=${{ github.event.inputs.duration || '5' }}m \
+               --html=performance-report.html \
+               --csv=performance-results
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-performance-results
+        path: |
+          backend/tests/performance/performance-report.html
+          backend/tests/performance/performance-results*.csv
+
+  # Frontend Performance Tests
+  frontend-performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        npm install -g @lhci/cli
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview &
+        sleep 10
+    
+    - name: Run Lighthouse CI
+      run: |
+        lhci autorun --config=frontend/lighthouserc.json
+    
+    - name: Upload Lighthouse results
+      uses: actions/upload-artifact@v3
+      with:
+        name: lighthouse-results
+        path: .lighthouseci/
+
+  # Database Performance Tests
+  database-performance:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_USER: testuser
+          POSTGRES_DB: trading_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        pip install pgbench
+    
+    - name: Run database performance tests
+      run: |
+        cd backend/tests/performance
+        python db_performance_tests.py
+    
+    - name: Upload database performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: database-performance-results
+        path: backend/tests/performance/db-performance-*.json
+
+  # Load Testing
+  load-testing:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install k6
+      run: |
+        sudo gpg -k
+        sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+    
+    - name: Run load tests
+      run: |
+        cd backend/tests/performance
+        k6 run --duration=${{ github.event.inputs.duration || '10' }}m \
+               --vus=50 \
+               --out json=load-test-results.json \
+               load_test.js
+    
+    - name: Upload load test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: load-test-results
+        path: backend/tests/performance/load-test-results.json
+
+  # Memory Profiling
+  memory-profiling:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_USER: testuser
+          POSTGRES_DB: trading_test
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        pip install memory-profiler py-spy
+    
+    - name: Run memory profiling
+      run: |
+        cd backend
+        export DATABASE_URL=postgresql://testuser:testpass@localhost:5432/trading_test
+        export REDIS_URL=redis://localhost:6379
+        python -m memory_profiler tests/performance/memory_profile.py > memory-profile.txt
+    
+    - name: Upload memory profile results
+      uses: actions/upload-artifact@v3
+      with:
+        name: memory-profile-results
+        path: backend/memory-profile.txt

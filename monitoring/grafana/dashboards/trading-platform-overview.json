@@ -1,0 +1,307 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Trading Platform Overview",
+    "tags": ["trading", "platform", "overview"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 0,
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "refresh": "30s",
+    "version": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"trading-platform\"}",
+            "legendFormat": "Service Up",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Active Trading Strategies",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "trading_strategy_signals_total",
+            "legendFormat": "Active Strategies",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Total Portfolio Value",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(trading_portfolio_value_usd)",
+            "legendFormat": "Portfolio Value ($)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Trades Today",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(trading_trades_total[24h])",
+            "legendFormat": "Trades",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(trading_api_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Trading Volume",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(trading_trade_value_usd_sum[5m])",
+            "legendFormat": "{{symbol}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Volume ($)/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "Response Time Percentiles",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(trading_api_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(trading_api_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(trading_api_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Response Time (seconds)",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(trading_api_requests_total{status_code=~\"4..|5..\"}[5m]) / rate(trading_api_requests_total[5m])",
+            "legendFormat": "Error Rate",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate (%)",
+            "min": 0,
+            "max": 1
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Strategy Performance",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "trading_strategy_performance_ratio",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "strategy_id": "Strategy",
+                "metric": "Metric",
+                "Value": "Value"
+              }
+            }
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+      },
+      {
+        "id": 10,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "trading_system_cpu_usage",
+            "legendFormat": "CPU Usage (%)",
+            "refId": "A"
+          },
+          {
+            "expr": "trading_system_memory_usage",
+            "legendFormat": "Memory Usage (%)",
+            "refId": "B"
+          },
+          {
+            "expr": "trading_system_disk_usage",
+            "legendFormat": "Disk Usage (%)",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Usage (%)",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
+      },
+      {
+        "id": 11,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "trading_db_connections_active",
+            "legendFormat": "{{database}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 28}
+      },
+      {
+        "id": 12,
+        "title": "Market Data Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "trading_market_data_latency_seconds",
+            "legendFormat": "{{symbol}} {{data_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Latency (seconds)",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 28}
+      },
+      {
+        "id": 13,
+        "title": "Risk Violations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(trading_risk_violations_total[5m])",
+            "legendFormat": "{{violation_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Violations/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 28}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    }
+  }
+}

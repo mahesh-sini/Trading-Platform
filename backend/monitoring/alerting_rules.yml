@@ -1,0 +1,232 @@
+groups:
+  - name: trading_platform_alerts
+    rules:
+      # Market Data Alerts
+      - alert: MarketDataProviderDown
+        expr: trading_provider_errors_total{error_type!="rate_limit_exceeded"} > 10
+        for: 2m
+        labels:
+          severity: critical
+          service: market_data
+        annotations:
+          summary: "Market data provider {{ $labels.provider }} is experiencing high error rates"
+          description: "Provider {{ $labels.provider }} has generated {{ $value }} errors in the last 2 minutes"
+          
+      - alert: MarketDataLatencyHigh
+        expr: histogram_quantile(0.95, trading_market_data_latency_seconds_bucket) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          service: market_data
+        annotations:
+          summary: "High market data latency detected"
+          description: "95th percentile latency is {{ $value }}s for {{ $labels.symbol }} from {{ $labels.provider }}"
+          
+      - alert: MarketDataStale
+        expr: trading_market_data_age_seconds > 300
+        for: 1m
+        labels:
+          severity: critical
+          service: market_data
+        annotations:
+          summary: "Stale market data detected"
+          description: "Market data for {{ $labels.symbol }} is {{ $value }}s old"
+          
+      - alert: RateLimitApproaching
+        expr: trading_provider_rate_limit_remaining / trading_provider_api_calls_total < 0.1
+        for: 1m
+        labels:
+          severity: warning
+          service: market_data
+        annotations:
+          summary: "API rate limit approaching for {{ $labels.provider }}"
+          description: "Only {{ $value }} API calls remaining for {{ $labels.provider }}"
+
+      # Trading System Alerts
+      - alert: TradeExecutionLatencyHigh
+        expr: histogram_quantile(0.95, trading_trade_latency_seconds_bucket) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "High trade execution latency"
+          description: "95th percentile trade latency is {{ $value }}s"
+          
+      - alert: TradeFailureRateHigh
+        expr: rate(trading_trades_total{status="failed"}[5m]) / rate(trading_trades_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: trading
+        annotations:
+          summary: "High trade failure rate detected"
+          description: "Trade failure rate is {{ $value | humanizePercentage }}"
+          
+      - alert: RiskViolationDetected
+        expr: increase(trading_risk_violations_total[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          service: risk
+        annotations:
+          summary: "Risk violation detected"
+          description: "Risk violation of type {{ $labels.violation_type }} for {{ $labels.symbol }}"
+
+      # System Health Alerts
+      - alert: DatabaseConnectionFailure
+        expr: trading_db_connections_active < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection failure"
+          description: "No active database connections detected"
+          
+      - alert: DatabaseLatencyHigh
+        expr: histogram_quantile(0.95, trading_db_operation_duration_seconds_bucket) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High database latency"
+          description: "95th percentile database operation latency is {{ $value }}s"
+          
+      - alert: APIResponseTimeHigh
+        expr: histogram_quantile(0.95, trading_api_request_duration_seconds_bucket) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile API response time is {{ $value }}s for {{ $labels.endpoint }}"
+          
+      - alert: APIErrorRateHigh
+        expr: rate(trading_api_requests_total{status_code!~"2.."}[5m]) / rate(trading_api_requests_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is {{ $value | humanizePercentage }} for {{ $labels.endpoint }}"
+
+      # ML Model Alerts
+      - alert: MLModelAccuracyLow
+        expr: trading_ml_model_accuracy_ratio < 0.6
+        for: 10m
+        labels:
+          severity: warning
+          service: ml
+        annotations:
+          summary: "ML model accuracy is low"
+          description: "Model {{ $labels.model_name }} accuracy is {{ $value | humanizePercentage }}"
+          
+      - alert: MLPredictionLatencyHigh
+        expr: histogram_quantile(0.95, trading_ml_inference_duration_seconds_bucket) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: ml
+        annotations:
+          summary: "High ML prediction latency"
+          description: "95th percentile ML inference time is {{ $value }}s for {{ $labels.model_name }}"
+
+      # Infrastructure Alerts
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}%"
+          
+      - alert: LowDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.mountpoint }}"
+
+      # WebSocket Connection Alerts
+      - alert: WebSocketConnectionsLow
+        expr: trading_websocket_connections_active{connection_type="market_data"} < 1
+        for: 2m
+        labels:
+          severity: warning
+          service: websocket
+        annotations:
+          summary: "No active WebSocket connections for market data"
+          description: "Market data WebSocket connections are down"
+          
+      - alert: TooManyWebSocketConnections
+        expr: trading_websocket_connections_active > 1000
+        for: 1m
+        labels:
+          severity: warning
+          service: websocket
+        annotations:
+          summary: "Too many WebSocket connections"
+          description: "{{ $value }} WebSocket connections active"
+
+      # Strategy Performance Alerts
+      - alert: StrategyPerformancePoor
+        expr: trading_strategy_performance_ratio{metric="win_rate"} < 0.4
+        for: 30m
+        labels:
+          severity: warning
+          service: strategy
+        annotations:
+          summary: "Poor strategy performance"
+          description: "Strategy {{ $labels.strategy_id }} win rate is {{ $value | humanizePercentage }}"
+          
+      - alert: StrategyExecutionSlow
+        expr: histogram_quantile(0.95, trading_strategy_execution_seconds_bucket) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: strategy
+        annotations:
+          summary: "Slow strategy execution"
+          description: "95th percentile strategy execution time is {{ $value }}s for {{ $labels.strategy_id }}"
+
+  - name: market_hours_alerts
+    rules:
+      # Market hours specific alerts
+      - alert: MarketDataDuringTradingHours
+        expr: trading_market_data_updates_total == 0 and (hour() >= 9 and hour() <= 15 and day_of_week() >= 1 and day_of_week() <= 5)
+        for: 5m
+        labels:
+          severity: critical
+          service: market_data
+        annotations:
+          summary: "No market data updates during trading hours"
+          description: "No market data updates received during active trading hours"
+          
+      - alert: UnexpectedTradingActivity
+        expr: trading_trades_total > 0 and (hour() < 9 or hour() > 15 or day_of_week() == 0 or day_of_week() == 6)
+        for: 1m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "Trading activity outside market hours"
+          description: "Unexpected trading activity detected outside normal market hours"

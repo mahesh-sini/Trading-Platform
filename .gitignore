@@ -1,0 +1,254 @@
+# Trading Platform .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environments
+trading_env/
+venv/
+ENV/
+env/
+.venv/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+secrets/
+config/secrets.json
+config/production.json
+
+# API Keys & Credentials
+*api_key*
+*secret*
+*password*
+*token*
+credentials/
+keys/
+certs/
+*.pem
+*.key
+*.cert
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+trading_platform.db
+*.db-journal
+
+# ML Models & Data
+models/
+data/
+datasets/
+bhav_copies/
+historical_data/
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.model
+model_artifacts/
+
+# Logs
+logs/
+*.log
+*.log.*
+*.out
+production_setup.log
+
+# Temporary Files
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.atom/
+.spyderproject
+.spyproject
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# Kubernetes
+*.kubeconfig
+kube-config/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+terraform.tfplan.json
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Coverage Reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
+# Production Artifacts
+backups/
+exports/
+reports/
+performance_metrics/
+system_metrics/
+
+# Monitoring & Metrics
+grafana/data/
+prometheus/data/
+alertmanager/data/
+
+# Cache
+.cache/
+cache/
+*.cache
+
+# Claude Conversations (Optional - keep for reference)
+# conversations/
+
+# Deployment
+deployment_logs/
+rollback_artifacts/
+staging_data/
+
+# Testing
+test_data/
+test_results/
+screenshots/
+test_reports/
+
+# Documentation Build
+docs/_build/
+docs/build/
+site/
+
+# Backup Files
+*.bak
+*.backup
+*.old
+backup_*/
+
+# Custom Trading Data
+market_data_cache/
+real_time_feeds/
+broker_connections/
+order_history/
+portfolio_snapshots/
+
+# ML Experiment Tracking
+mlruns/
+.mlflow/
+wandb/
+.neptune/
+experiments/
+
+# Performance Profiling
+*.prof
+profile_results/
+
+# System Generated
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json

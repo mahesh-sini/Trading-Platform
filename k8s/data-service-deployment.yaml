@@ -1,0 +1,176 @@
+# Data Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-service
+  namespace: trading-platform
+  labels:
+    app: data-service
+    tier: data
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: data-service
+  template:
+    metadata:
+      labels:
+        app: data-service
+        tier: data
+        version: v1
+    spec:
+      containers:
+      - name: data-service
+        image: ghcr.io/trading-platform/data-service:latest
+        ports:
+        - containerPort: 8002
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: redis-url
+        - name: INFLUXDB_URL
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-credentials
+              key: influxdb-url
+        - name: INFLUXDB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-credentials
+              key: influxdb-token
+        - name: ALPHA_VANTAGE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-credentials
+              key: alpha-vantage-api-key
+              optional: true
+        - name: POLYGON_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-credentials
+              key: polygon-api-key
+              optional: true
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - configMapRef:
+            name: database-config
+        - configMapRef:
+            name: redis-config
+        - configMapRef:
+            name: influxdb-config
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: data-storage
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: data-storage
+        persistentVolumeClaim:
+          claimName: data-storage-pvc
+      - name: logs
+        emptyDir: {}
+      securityContext:
+        fsGroup: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-service-service
+  namespace: trading-platform
+  labels:
+    app: data-service
+spec:
+  selector:
+    app: data-service
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8002
+  type: ClusterIP
+---
+# Persistent Volume Claim for Data Storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-storage-pvc
+  namespace: trading-platform
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: gp2
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: data-service-hpa
+  namespace: trading-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: data-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

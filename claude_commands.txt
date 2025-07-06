@@ -1,0 +1,21 @@
+# Trading Platform Development Commands
+
+# Project Setup
+python claude_cli.py "Create the initial project structure and main files for our AI trading platform"
+
+# Backend Development
+python claude_cli.py "Help me implement the FastAPI backend with user authentication and broker API integration"
+python claude_cli.py "Create database models for users, trades, and portfolio management"
+python claude_cli.py "Implement the automated trading engine with risk management"
+
+# Frontend Development
+python claude_cli.py "Create a React trading dashboard with real-time price updates using WebSocket"
+python claude_cli.py "Build a responsive trading interface with charts and order placement"
+
+# ML Model Development
+python claude_cli.py "Implement the ensemble ML model for stock price prediction"
+python claude_cli.py "Create the data pipeline for processing market data and training models"
+
+# DevOps & Deployment
+python claude_cli.py "Set up Docker containers for the trading platform"
+python claude_cli.py "Create CI/CD pipeline for automated deployment"

@@ -1,0 +1,258 @@
+groups:
+  - name: trading-platform-alerts
+    rules:
+      # High-level service availability
+      - alert: ServiceDown
+        expr: up{job=~"trading-platform-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Trading Platform service is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute."
+
+      # API Performance Alerts
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(trading_api_request_duration_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile API latency is {{ $value }}s, exceeding 1 second threshold."
+
+      - alert: HighErrorRate
+        expr: rate(trading_api_requests_total{status_code=~"5.."}[5m]) / rate(trading_api_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is {{ $value | humanizePercentage }}, exceeding 5% threshold."
+
+      # Trading-specific alerts
+      - alert: TradingExecutionFailure
+        expr: rate(trading_trades_total{status="failed"}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "High trading execution failure rate"
+          description: "Trading execution failure rate is {{ $value }} trades/sec."
+
+      - alert: StrategyNotGeneratingSignals
+        expr: increase(trading_strategy_signals_total[30m]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          component: strategy
+        annotations:
+          summary: "Strategy not generating signals"
+          description: "Strategy {{ $labels.strategy_id }} has not generated signals for 30 minutes."
+
+      - alert: HighTradeLatency
+        expr: histogram_quantile(0.95, rate(trading_trade_latency_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "High trade execution latency"
+          description: "95th percentile trade execution latency is {{ $value }}s, exceeding 100ms threshold."
+
+      # Risk Management Alerts
+      - alert: RiskViolationSpike
+        expr: rate(trading_risk_violations_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: risk
+        annotations:
+          summary: "High risk violation rate"
+          description: "Risk violations occurring at {{ $value }} violations/sec."
+
+      - alert: HighPortfolioExposure
+        expr: trading_risk_exposure_ratio > 0.9
+        for: 1m
+        labels:
+          severity: warning
+          component: risk
+        annotations:
+          summary: "High portfolio exposure"
+          description: "Portfolio exposure for {{ $labels.symbol }} is {{ $value | humanizePercentage }}."
+
+      # Market Data Alerts
+      - alert: StaleMarketData
+        expr: trading_market_data_age_seconds > 300
+        for: 1m
+        labels:
+          severity: warning
+          component: market_data
+        annotations:
+          summary: "Stale market data detected"
+          description: "Market data for {{ $labels.symbol }} is {{ $value }}s old."
+
+      - alert: HighMarketDataLatency
+        expr: histogram_quantile(0.95, rate(trading_market_data_latency_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: market_data
+        annotations:
+          summary: "High market data latency"
+          description: "95th percentile market data latency is {{ $value }}s."
+
+      # Database Alerts
+      - alert: DatabaseConnectionsHigh
+        expr: trading_db_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database connection count"
+          description: "Database has {{ $value }} active connections."
+
+      - alert: DatabaseLatencyHigh
+        expr: histogram_quantile(0.95, rate(trading_db_operation_duration_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database operation latency"
+          description: "95th percentile database operation latency is {{ $value }}s."
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}%."
+
+      - alert: HighDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is {{ $value }}%."
+
+      # ML Service Alerts
+      - alert: MLModelAccuracyDrop
+        expr: trading_ml_model_accuracy_ratio < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "ML model accuracy drop"
+          description: "Model {{ $labels.model_name }} accuracy dropped to {{ $value | humanizePercentage }}."
+
+      - alert: MLInferenceLatencyHigh
+        expr: histogram_quantile(0.95, rate(trading_ml_inference_duration_seconds_bucket[5m])) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "High ML inference latency"
+          description: "95th percentile ML inference latency is {{ $value }}s."
+
+      # Business Logic Alerts
+      - alert: DailyPnLAlert
+        expr: sum(trading_realized_pnl_usd_total) < -10000
+        for: 1m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "Large daily loss detected"
+          description: "Daily PnL is {{ $value | humanize }}."
+
+      - alert: PortfolioValueDrop
+        expr: (trading_portfolio_value_usd - trading_portfolio_value_usd offset 1h) / trading_portfolio_value_usd offset 1h < -0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: portfolio
+        annotations:
+          summary: "Significant portfolio value drop"
+          description: "Portfolio value dropped by {{ $value | humanizePercentage }} in the last hour."
+
+      # WebSocket Connection Alerts
+      - alert: WebSocketConnectionsLow
+        expr: trading_websocket_connections_active{connection_type="market_data"} < 1
+        for: 2m
+        labels:
+          severity: critical
+          component: websocket
+        annotations:
+          summary: "No active WebSocket connections"
+          description: "No active {{ $labels.connection_type }} WebSocket connections."
+
+  - name: trading-platform-capacity
+    rules:
+      # Capacity planning alerts
+      - alert: HighTradeVolume
+        expr: rate(trading_trades_total[1h]) > 1000
+        for: 5m
+        labels:
+          severity: info
+          component: capacity
+        annotations:
+          summary: "High trade volume detected"
+          description: "Trade volume is {{ $value }} trades/hour, approaching capacity limits."
+
+      - alert: APIRequestVolumeHigh
+        expr: rate(trading_api_requests_total[1h]) > 10000
+        for: 5m
+        labels:
+          severity: info
+          component: capacity
+        annotations:
+          summary: "High API request volume"
+          description: "API request volume is {{ $value }} requests/hour."
+
+  - name: trading-platform-sla
+    rules:
+      # SLA-related alerts
+      - alert: TradingLatencySLA
+        expr: histogram_quantile(0.95, rate(trading_trade_latency_seconds_bucket[5m])) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: sla
+        annotations:
+          summary: "Trading latency SLA breach"
+          description: "95th percentile trading latency is {{ $value }}s, breaching 50ms SLA."
+
+      - alert: APIAvailabilitySLA
+        expr: (rate(trading_api_requests_total{status_code!~"5.."}[24h]) / rate(trading_api_requests_total[24h])) < 0.999
+        for: 1m
+        labels:
+          severity: critical
+          component: sla
+        annotations:
+          summary: "API availability SLA breach"
+          description: "API availability is {{ $value | humanizePercentage }}, below 99.9% SLA."

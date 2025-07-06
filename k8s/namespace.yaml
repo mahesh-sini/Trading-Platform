@@ -1,0 +1,18 @@
+# Kubernetes Namespaces for AI Trading Platform
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trading-platform
+  labels:
+    name: trading-platform
+    app: ai-trading-platform
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    app: ai-trading-platform
+    purpose: monitoring

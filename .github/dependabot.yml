@@ -1,0 +1,117 @@
+version: 2
+
+updates:
+  # Backend Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "trading-platform-team"
+    assignees:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # Frontend npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "trading-platform-team"
+    assignees:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(docker):"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(docker):"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/data-service"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(docker):"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/ml-service"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(docker):"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "trading-platform-team"
+    commit-message:
+      prefix: "chore(actions):"
+    labels:
+      - "dependencies"
+      - "github-actions"

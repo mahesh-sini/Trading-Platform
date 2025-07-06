@@ -1,0 +1,304 @@
+groups:
+  - name: trading_platform_alerts
+    rules:
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 2 minutes on {{ $labels.instance }}"
+
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 1m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Critical CPU usage detected"
+          description: "CPU usage is above 95% for more than 1 minute on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for more than 2 minutes on {{ $labels.instance }}"
+
+      - alert: CriticalMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Critical memory usage detected"
+          description: "Memory usage is above 95% for more than 1 minute on {{ $labels.instance }}"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is above 90% for more than 5 minutes on {{ $labels.instance }} filesystem {{ $labels.mountpoint }}"
+
+      # Application Performance Alerts
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="backend-api"}[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High API response time detected"
+          description: "95th percentile API response time is above 500ms for more than 2 minutes"
+
+      - alert: CriticalAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="backend-api"}[5m])) > 2.0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Critical API response time detected"
+          description: "95th percentile API response time is above 2 seconds for more than 1 minute"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "HTTP 5xx error rate is above 5% for more than 2 minutes"
+
+      - alert: CriticalErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 15
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Critical error rate detected"
+          description: "HTTP 5xx error rate is above 15% for more than 1 minute"
+
+      # Trading-Specific Alerts
+      - alert: SlowTradeExecution
+        expr: histogram_quantile(0.95, rate(trade_execution_duration_seconds_bucket[5m])) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "Slow trade execution detected"
+          description: "95th percentile trade execution time is above 50ms for more than 1 minute"
+
+      - alert: CriticalTradeExecutionDelay
+        expr: histogram_quantile(0.95, rate(trade_execution_duration_seconds_bucket[5m])) > 0.1
+        for: 30s
+        labels:
+          severity: critical
+          service: trading
+        annotations:
+          summary: "Critical trade execution delay detected"
+          description: "95th percentile trade execution time is above 100ms for more than 30 seconds"
+
+      - alert: HighTradeFailureRate
+        expr: rate(trades_failed_total[5m]) / rate(trades_total[5m]) * 100 > 2
+        for: 1m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "High trade failure rate detected"
+          description: "Trade failure rate is above 2% for more than 1 minute"
+
+      - alert: NoTradeActivity
+        expr: rate(trades_total[10m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "No trade activity detected"
+          description: "No trades have been executed for more than 5 minutes"
+
+      # Database Alerts
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connection usage is above 80% for more than 2 minutes"
+
+      - alert: SlowDatabaseQueries
+        expr: rate(pg_stat_database_blk_read_time[5m]) / rate(pg_stat_database_blks_read[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average database query time is above 10ms for more than 2 minutes"
+
+      - alert: DatabaseConnectionFailures
+        expr: increase(pg_stat_database_xact_rollback[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database connection failures detected"
+          description: "More than 10 database transaction rollbacks in the last 5 minutes"
+
+      # Redis Alerts
+      - alert: HighRedisMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is above 85% for more than 2 minutes"
+
+      - alert: RedisConnectionFailures
+        expr: increase(redis_rejected_connections_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis connection failures detected"
+          description: "Redis is rejecting connections"
+
+      # ML Service Alerts
+      - alert: SlowMLPredictions
+        expr: histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket[5m])) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+          service: ml
+        annotations:
+          summary: "Slow ML predictions detected"
+          description: "95th percentile ML prediction time is above 200ms for more than 2 minutes"
+
+      - alert: MLModelAccuracyDrop
+        expr: ml_model_accuracy < 0.7
+        for: 5m
+        labels:
+          severity: warning
+          service: ml
+        annotations:
+          summary: "ML model accuracy drop detected"
+          description: "ML model accuracy has dropped below 70% for more than 5 minutes"
+
+      # Container/Service Health Alerts
+      - alert: ContainerDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Container/Service down"
+          description: "{{ $labels.job }} container/service has been down for more than 1 minute"
+
+      - alert: ContainerHighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes * 100 > 90
+        for: 2m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 90% for more than 2 minutes"
+
+      - alert: ContainerHighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80% for more than 2 minutes"
+
+      # Data Service Alerts
+      - alert: DataIngestionFailures
+        expr: increase(data_ingestion_failures_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          service: data
+        annotations:
+          summary: "Data ingestion failures detected"
+          description: "More than 5 data ingestion failures in the last 5 minutes"
+
+      - alert: StaleMarketData
+        expr: time() - market_data_last_update_timestamp > 300
+        for: 1m
+        labels:
+          severity: critical
+          service: data
+        annotations:
+          summary: "Stale market data detected"
+          description: "Market data has not been updated for more than 5 minutes"
+
+  - name: business_logic_alerts
+    rules:
+      # Portfolio Risk Alerts
+      - alert: HighPortfolioRisk
+        expr: portfolio_risk_score > 0.8
+        for: 1m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "High portfolio risk detected"
+          description: "Portfolio risk score is above 0.8"
+
+      - alert: LargePositionSize
+        expr: position_size_percentage > 10
+        for: 1m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "Large position size detected"
+          description: "Position size is above 10% of portfolio for {{ $labels.symbol }}"
+
+      # Strategy Performance Alerts
+      - alert: StrategyUnderperformance
+        expr: strategy_return_7d < -0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: trading
+        annotations:
+          summary: "Strategy underperformance detected"
+          description: "Strategy {{ $labels.strategy_id }} has negative returns below -5% over 7 days"
+
+      - alert: StrategyDrawdown
+        expr: strategy_drawdown > 0.15
+        for: 2m
+        labels:
+          severity: critical
+          service: trading
+        annotations:
+          summary: "High strategy drawdown detected"
+          description: "Strategy {{ $labels.strategy_id }} drawdown is above 15%"

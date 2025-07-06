@@ -1,0 +1,235 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: trading_platform_postgres
+    environment:
+      POSTGRES_DB: trading_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: trading_platform_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: trading_platform_influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: trading-platform
+      DOCKER_INFLUXDB_INIT_BUCKET: market-data
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: trading-platform-token
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: trading_platform_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: trading_platform_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend API service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trading_platform_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/trading_platform
+      REDIS_URL: redis://redis:6379
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: trading-platform-token
+      SECRET_KEY: your-secret-key-change-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      ENVIRONMENT: development
+      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      ALPACA_API_KEY: ${ALPACA_API_KEY:-your_alpaca_api_key}
+      ALPACA_SECRET_KEY: ${ALPACA_SECRET_KEY:-your_alpaca_secret_key}
+      ALPACA_BASE_URL: https://paper-api.alpaca.markets
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - ./backend/logs:/home/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - default
+
+  # Data Service
+  data-service:
+    build:
+      context: ./data_service
+      dockerfile: Dockerfile
+    container_name: trading_platform_data_service
+    ports:
+      - "8002:8002"
+    environment:
+      REDIS_URL: redis://redis:6379
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: trading-platform-token
+      INFLUXDB_ORG: trading-platform
+      INFLUXDB_BUCKET: market-data
+      ENVIRONMENT: development
+      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-your_alpha_vantage_api_key}
+      DATA_SERVICE_PORT: 8002
+    depends_on:
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - ./data_service/logs:/home/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - default
+
+  # ML Service
+  ml-service:
+    build:
+      context: ./ml_service
+      dockerfile: Dockerfile
+    container_name: trading_platform_ml_service
+    ports:
+      - "8003:8003"
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATA_SERVICE_URL: http://data-service:8002
+      ENVIRONMENT: development
+      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
+      ML_SERVICE_PORT: 8003
+    depends_on:
+      - redis
+      - data-service
+    volumes:
+      - ./ml_service/logs:/home/app/logs
+      - ./ml_service/models:/home/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - default
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: trading_platform_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_DATA_SERVICE_URL: http://localhost:8002
+      NEXT_PUBLIC_ML_SERVICE_URL: http://localhost:8003
+      NEXT_PUBLIC_WS_URL: ws://localhost:8002
+      NEXT_PUBLIC_APP_NAME: AI Trading Platform
+      NEXT_PUBLIC_ENV: development
+    depends_on:
+      - backend
+      - data-service
+      - ml-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+  redis_data:
+  influxdb_data:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
+
+networks:
+  default:
+    name: trading_platform_network
