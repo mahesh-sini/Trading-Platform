@@ -22,8 +22,8 @@ tensorflow>=2.15.0
 keras>=2.15.0
 joblib>=1.3.0
 
-# Technical analysis - alternative to TA-Lib for better compatibility
-talib-binary==0.4.19
+# Technical analysis - using TA-Lib with system dependencies
+TA-Lib==0.4.28
 
 # Visualization
 matplotlib==3.8.2
