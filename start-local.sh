@@ -33,8 +33,17 @@ print_error() {
 
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
-    print_error "Docker is not running. Please start Docker first."
-    exit 1
+    if ! sudo docker info > /dev/null 2>&1; then
+        print_error "Docker is not running. Please start Docker first."
+        exit 1
+    else
+        print_warning "Docker requires sudo access. You may want to add your user to the docker group."
+        DOCKER_CMD="sudo docker"
+        COMPOSE_CMD="sudo docker-compose"
+    fi
+else
+    DOCKER_CMD="docker"
+    COMPOSE_CMD="docker-compose"
 fi
 
 # Check if docker-compose is available
@@ -44,28 +53,28 @@ if ! command -v docker-compose &> /dev/null; then
 fi
 
 print_status "Stopping any existing containers..."
-docker-compose down --remove-orphans
+$COMPOSE_CMD down --remove-orphans
 
 print_status "Cleaning up unused Docker resources..."
-docker system prune -f
+$DOCKER_CMD system prune -f
 
 print_status "Building Docker images..."
-docker-compose build --no-cache
+$COMPOSE_CMD build --no-cache
 
 print_status "Starting infrastructure services (databases, cache, etc.)..."
-docker-compose up -d postgres redis influxdb
+$COMPOSE_CMD up -d postgres redis influxdb
 
 print_status "Waiting for databases to be ready..."
 sleep 30
 
 print_status "Starting application services..."
-docker-compose up -d backend data-service ml-service
+$COMPOSE_CMD up -d backend data-service ml-service
 
 print_status "Waiting for backend services to be ready..."
 sleep 45
 
 print_status "Starting frontend..."
-docker-compose up -d frontend
+$COMPOSE_CMD up -d frontend
 
 print_success "All services started successfully!"
 
