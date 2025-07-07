@@ -16,6 +16,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Ensure public directory exists after build
+RUN mkdir -p /app/public
+
 # Production stage
 FROM node:18-alpine as production
 
@@ -36,8 +39,10 @@ WORKDIR /app
 # Copy necessary files from builder stage
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.js ./
+
+# Copy public directory
+COPY --from=builder /app/public ./public
 
 # Copy node_modules (optimized)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
