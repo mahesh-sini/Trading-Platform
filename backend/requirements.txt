@@ -29,7 +29,7 @@ requests==2.31.0
 # Data processing
 pandas==2.1.4
 numpy==1.24.4
-scikit-learn==1.3.2
+scikit-learn==1.6.1
 
 # Market data APIs
 yfinance==0.2.28
