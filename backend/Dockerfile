@@ -23,7 +23,7 @@ WORKDIR /home/app
 
 # Copy requirements and install Python dependencies
 COPY --chown=app:app requirements.txt ./
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir --timeout=300 --retries=3 -r requirements.txt
 
 # Production stage
 FROM python:3.11-slim as production
