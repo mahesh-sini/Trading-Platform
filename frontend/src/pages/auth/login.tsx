@@ -76,7 +76,7 @@ const Login: React.FC = () => {
           
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 onClick={() => router.push('/auth/register')}
                 className="text-primary-600 hover:text-primary-500 font-medium"

@@ -247,7 +247,7 @@ const AutoTradingStatus: React.FC<AutoTradingStatusProps> = ({ status, onRefresh
       {/* Today's Progress */}
       <Card className="lg:col-span-3">
         <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Today's Progress</h3>
+          <h3 className="text-lg font-semibold mb-4">Today&apos;s Progress</h3>
           
           <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
             <div 

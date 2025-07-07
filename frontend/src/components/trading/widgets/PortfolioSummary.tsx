@@ -144,7 +144,7 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({ userId }) => {
                 ({isPositiveChange ? '+' : ''}{numeral(portfolio.dayChangePercent).format('0.00')}%)
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Today's Change</p>
+            <p className="text-xs text-gray-500 mt-1">Today&apos;s Change</p>
           </motion.div>
         </div>
 

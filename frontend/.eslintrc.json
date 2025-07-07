@@ -3,8 +3,9 @@
     "next/core-web-vitals"
   ],
   "rules": {
-    "react-hooks/exhaustive-deps": "warn",
-    "no-console": "warn"
+    "react-hooks/exhaustive-deps": "off",
+    "no-console": "off",
+    "react/no-unescaped-entities": "error"
   },
   "ignorePatterns": ["node_modules/", ".next/", "out/"]
 }

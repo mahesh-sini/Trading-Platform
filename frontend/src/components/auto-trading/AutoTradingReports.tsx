@@ -203,7 +203,7 @@ const AutoTradingReports: React.FC<AutoTradingReportsProps> = ({ className }) =>
             >
               <div className="text-center">
                 <div className="text-2xl mb-1">📊</div>
-                <div className="text-sm">Today's Trades</div>
+                <div className="text-sm">Today&apos;s Trades</div>
               </div>
             </Button>
             
