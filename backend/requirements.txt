@@ -10,7 +10,7 @@ alembic==1.13.1
 psycopg2-binary==2.9.9
 
 # Caching and messaging
-redis==5.0.1
+redis==6.2.0
 celery==5.3.4
 
 # Authentication and security
