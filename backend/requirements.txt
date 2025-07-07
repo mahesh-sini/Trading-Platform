@@ -23,7 +23,7 @@ python-dotenv==1.0.0
 
 # HTTP clients and networking
 httpx==0.26.0
-websockets==12.0
+websockets>=9.0,<11.0
 requests==2.31.0
 
 # Data processing
