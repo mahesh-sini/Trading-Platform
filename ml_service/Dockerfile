@@ -5,7 +5,8 @@ FROM python:3.10-slim as builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TA_LIB_VER=0.4.0
 
 # Install system dependencies for ML libraries and TA-Lib
 RUN apt-get update && apt-get install -y \
@@ -21,23 +22,34 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install TA-Lib
-RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
-    tar -xzf ta-lib-0.4.0-src.tar.gz && \
-    cd ta-lib/ && \
-    ./configure --prefix=/usr && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
+# RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+#     tar -xvzf ta-lib-0.4.0-src.tar.gz && \
+#     cd ta-lib-0.4.0/ && \
+#     ./configure --prefix=/usr && \
+#     make && \
+#     make install && \
+#     cd .. && \
+#     rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
 
+# Use curl -L to follow redirects, and name the file correctly
+RUN curl -L -o ta-lib-0.4.0-src.tar.gz http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+    tar -xzf ta-lib-0.4.0-src.tar.gz && \
+    cd ta-lib && \
+    ./configure --prefix=/usr && \
+    make && make install && \
+    cd .. && rm -rf ta-lib*
+
+
+ENV LD_LIBRARY_PATH=/usr/lib
 # Create and use non-root user
 RUN useradd --create-home --shell /bin/bash app
 USER app
 WORKDIR /home/app
 
+RUN pip install --no-build-isolation --no-cache-dir numpy==1.23.5
 # Copy requirements and install Python dependencies
 COPY --chown=app:app requirements.txt ./
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-build-isolation --no-cache-dir -r requirements.txt
 
 # Production stage
 FROM python:3.10-slim as production
