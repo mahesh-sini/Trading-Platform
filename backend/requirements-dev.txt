@@ -7,7 +7,7 @@ pytest-xdist==3.4.0
 httpx==0.25.2
 requests-mock==1.11.0
 fakeredis==2.20.1
-factory-boy==3.3.0
+factory-boy==3.3.3
 
 # Code quality
 black==23.11.0
