@@ -1,5 +1,5 @@
 # Multi-stage build for ML Service
-FROM python:3.11-slim as builder
+FROM python:3.10-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -40,7 +40,7 @@ COPY --chown=app:app requirements.txt ./
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.10-slim as production
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
