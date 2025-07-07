@@ -1,5 +1,33 @@
 import { ApiClient } from '../api'
 
+// Helper function to create mock Response objects
+function createMockResponse(options: {
+  ok?: boolean
+  status?: number
+  statusText?: string
+  json?: () => Promise<any>
+  text?: () => Promise<string>
+}): Response {
+  return {
+    ok: options.ok ?? true,
+    status: options.status ?? 200,
+    statusText: options.statusText ?? 'OK',
+    headers: new Headers(),
+    redirected: false,
+    type: 'basic',
+    url: 'http://localhost:8000/api/v1/test',
+    clone: jest.fn(),
+    body: null,
+    bodyUsed: false,
+    arrayBuffer: jest.fn(),
+    blob: jest.fn(),
+    formData: jest.fn(),
+    text: options.text ?? jest.fn(),
+    json: options.json ?? jest.fn(),
+    bytes: jest.fn(),
+  } as Response
+}
+
 describe('ApiClient', () => {
   let apiClient: ApiClient
   let mockFetch: jest.MockedFunction<typeof fetch>
@@ -84,10 +112,9 @@ describe('ApiClient', () => {
 
   describe('HTTP methods', () => {
     beforeEach(() => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true, data: 'test data', message: 'success' }),
-      } as Response)
+      mockFetch.mockResolvedValue(createMockResponse({
+        json: async () => ({ success: true, data: 'test data', message: 'success' })
+      }))
     })
 
     describe('GET requests', () => {
@@ -214,11 +241,11 @@ describe('ApiClient', () => {
 
   describe('error handling', () => {
     it('should handle HTTP error responses', async () => {
-      mockFetch.mockResolvedValue({
+      mockFetch.mockResolvedValue(createMockResponse({
         ok: false,
         status: 404,
-        text: async () => 'Not Found',
-      } as Response)
+        text: async () => 'Not Found'
+      }))
 
       const response = await apiClient.get('/nonexistent')
 
@@ -227,11 +254,11 @@ describe('ApiClient', () => {
     })
 
     it('should handle 401 unauthorized responses', async () => {
-      mockFetch.mockResolvedValue({
+      mockFetch.mockResolvedValue(createMockResponse({
         ok: false,
         status: 401,
-        text: async () => 'Unauthorized',
-      } as Response)
+        text: async () => 'Unauthorized'
+      }))
 
       // Mock window.location for browser environment test
       const mockLocation = { href: '' }
@@ -281,10 +308,9 @@ describe('ApiClient', () => {
 
   describe('file upload', () => {
     it('should upload file successfully', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true, data: { fileId: 'file123' }, message: 'File uploaded' }),
-      } as Response)
+      mockFetch.mockResolvedValue(createMockResponse({
+        json: async () => ({ success: true, data: { fileId: 'file123' }, message: 'File uploaded' })
+      }))
 
       const mockFile = new File(['content'], 'test.txt', { type: 'text/plain' })
       const additionalData = { category: 'documents' }
@@ -303,11 +329,11 @@ describe('ApiClient', () => {
     })
 
     it('should handle file upload errors', async () => {
-      mockFetch.mockResolvedValue({
+      mockFetch.mockResolvedValue(createMockResponse({
         ok: false,
         status: 413,
-        statusText: 'Payload Too Large',
-      } as Response)
+        statusText: 'Payload Too Large'
+      }))
 
       const mockFile = new File(['content'], 'large-file.txt')
       const response = await apiClient.uploadFile('/upload', mockFile)
@@ -319,10 +345,9 @@ describe('ApiClient', () => {
 
   describe('health check', () => {
     it('should perform health check successfully', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true }),
-      } as Response)
+      mockFetch.mockResolvedValue(createMockResponse({
+        json: async () => ({ success: true })
+      }))
 
       const isHealthy = await apiClient.healthCheck()
 
@@ -378,10 +403,9 @@ describe('ApiClient', () => {
   describe('response parsing', () => {
     it('should parse JSON response correctly', async () => {
       const mockData = { users: [{ id: 1, name: 'John' }] }
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ success: true, data: mockData }),
-      } as Response)
+      mockFetch.mockResolvedValue(createMockResponse({
+        json: async () => ({ success: true, data: mockData })
+      }))
 
       const response = await apiClient.get('/users')
 
@@ -389,10 +413,9 @@ describe('ApiClient', () => {
     })
 
     it('should handle malformed JSON response', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => { throw new Error('Invalid JSON') },
-      } as Response)
+      mockFetch.mockResolvedValue(createMockResponse({
+        json: async () => { throw new Error('Invalid JSON') }
+      }))
 
       const response = await apiClient.get('/test')
 

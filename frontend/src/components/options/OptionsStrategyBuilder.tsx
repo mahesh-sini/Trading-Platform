@@ -501,7 +501,13 @@ const OptionsStrategyBuilder: React.FC<OptionsStrategyBuilderProps> = ({
 
                 <div className="flex items-end">
                   <button
-                    onClick={() => onStrategyCreate?.(/* strategy data */)}
+                    onClick={() => onStrategyCreate?.({
+                      name: strategyName,
+                      legs: legs,
+                      underlyingSymbol: underlyingSymbol,
+                      underlyingPrice: underlyingPrice,
+                      createdAt: new Date().toISOString()
+                    })}
                     disabled={legs.length === 0 || !strategyName}
                     className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >

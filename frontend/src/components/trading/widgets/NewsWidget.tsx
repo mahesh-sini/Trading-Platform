@@ -46,16 +46,23 @@ const NewsWidget: React.FC<NewsWidgetProps> = ({
   });
 
   const webSocket = useWebSocket({
-    onMessage: handleNewsUpdate
+    autoConnect: true
   });
 
   // Handle real-time news updates
-  function handleNewsUpdate(message: any) {
-    if (message.type === 'news_update') {
-      const newsItem = message.data as NewsItem;
-      setNews(prev => [newsItem, ...prev.slice(0, maxItems - 1)]);
-    }
+  function handleNewsUpdate(data: any) {
+    const newsItem = data as NewsItem;
+    setNews(prev => [newsItem, ...prev.slice(0, maxItems - 1)]);
   }
+
+  // Register news update handler
+  useEffect(() => {
+    webSocket.registerMessageHandler('news_update', handleNewsUpdate);
+    
+    return () => {
+      webSocket.unregisterMessageHandler('news_update');
+    };
+  }, [webSocket]);
 
   // Fetch initial news data
   const fetchNews = useCallback(async () => {

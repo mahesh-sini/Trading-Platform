@@ -1,14 +1,30 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-pandas==2.1.4
-numpy==1.24.3
-redis==5.0.1
-aiohttp==3.9.1
-websockets==12.0
-yfinance==0.2.22
-influxdb-client==1.38.0
+# FastAPI and core dependencies
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Environment and configuration
 python-dotenv==1.0.0
-structlog==23.2.0
-httpx==0.25.2
+
+# Data processing
+pandas==2.1.4
+numpy==1.24.4
+
+# Caching
+redis==5.0.1
+
+# HTTP clients and networking
+aiohttp==3.9.1
+httpx==0.26.0
 requests==2.31.0
+websockets==12.0
+
+# Market data
+yfinance==0.2.28
+
+# Time series database
+influxdb-client==1.40.0
+
+# Logging
+structlog==23.2.0

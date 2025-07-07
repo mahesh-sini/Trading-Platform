@@ -115,14 +115,6 @@ const AdminAnalytics: React.FC = () => {
     end: null
   });
 
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
 
   useEffect(() => {
     loadAnalyticsData();
@@ -188,6 +180,15 @@ const AdminAnalytics: React.FC = () => {
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   const getGrowthColor = (growth: number) => {
@@ -277,6 +278,25 @@ const UserAnalyticsTab: React.FC<{ data: UserAnalytics[] }> = ({ data }) => {
 
   const latestData = data[data.length - 1];
   const previousData = data[data.length - 2];
+
+  const calculateGrowthRate = (current: number, previous: number): number => {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+
+  const getGrowthColor = (growth: number) => {
+    if (growth > 0) return theme.palette.success.main;
+    if (growth < 0) return theme.palette.error.main;
+    return theme.palette.grey[500];
+  };
+
+  const getGrowthIcon = (growth: number) => {
+    return growth >= 0 ? <TrendingUp /> : <TrendingDown />;
+  };
 
   const metrics = [
     {
@@ -420,7 +440,10 @@ const UserAnalyticsTab: React.FC<{ data: UserAnalytics[] }> = ({ data }) => {
                       outerRadius={80}
                       label
                     >
-                      {data.map((entry, index) => (
+                      {[
+                        { name: 'Active', value: latestData?.active_users_daily || 0, color: theme.palette.success.main },
+                        { name: 'Inactive', value: (latestData?.total_users || 0) - (latestData?.active_users_daily || 0), color: theme.palette.grey[400] }
+                      ].map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -439,6 +462,19 @@ const UserAnalyticsTab: React.FC<{ data: UserAnalytics[] }> = ({ data }) => {
 // Revenue Analytics Tab
 const RevenueAnalyticsTab: React.FC<{ data: RevenueAnalytics[] }> = ({ data }) => {
   const theme = useTheme();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
 
   const totalRevenue = data.reduce((sum, item) => sum + item.daily_revenue, 0);
   const totalCosts = data.reduce((sum, item) => sum + item.costs, 0);
@@ -549,6 +585,19 @@ const RevenueAnalyticsTab: React.FC<{ data: RevenueAnalytics[] }> = ({ data }) =
 // Trading Analytics Tab
 const TradingAnalyticsTab: React.FC<{ data: TradingAnalytics[] }> = ({ data }) => {
   const theme = useTheme();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
 
   const totalTrades = data.reduce((sum, item) => sum + item.total_trades, 0);
   const successfulTrades = data.reduce((sum, item) => sum + item.successful_trades, 0);
@@ -675,7 +724,10 @@ const TradingAnalyticsTab: React.FC<{ data: TradingAnalytics[] }> = ({ data }) =
                       outerRadius={80}
                       label
                     >
-                      {data.map((entry, index) => (
+                      {[
+                        { name: 'Successful', value: successfulTrades, color: theme.palette.success.main },
+                        { name: 'Failed', value: totalTrades - successfulTrades, color: theme.palette.error.main }
+                      ].map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -717,24 +769,5 @@ const SystemPerformanceTab: React.FC<{ data: SystemMetrics[] }> = ({ data }) => 
   );
 };
 
-// Utility functions
-const calculateGrowthRate = (current: number, previous: number): number => {
-  if (previous === 0) return 0;
-  return ((current - previous) / previous) * 100;
-};
-
-const formatPercentage = (value: number) => {
-  return `${value.toFixed(1)}%`;
-};
-
-const getGrowthColor = (growth: number) => {
-  if (growth > 0) return '#4caf50';
-  if (growth < 0) return '#f44336';
-  return '#9e9e9e';
-};
-
-const getGrowthIcon = (growth: number) => {
-  return growth >= 0 ? <TrendingUp /> : <TrendingDown />;
-};
 
 export default AdminAnalytics;

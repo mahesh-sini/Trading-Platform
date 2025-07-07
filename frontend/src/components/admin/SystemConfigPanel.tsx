@@ -53,7 +53,6 @@ import {
   Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { LoadingButton } from '@mui/lab';
 
 // Types
 interface APIConfig {
@@ -470,14 +469,13 @@ const SystemConfigPanel: React.FC = () => {
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <Tooltip title="Test Connection">
                                 <span>
-                                  <LoadingButton
+                                  <Button
                                     size="small"
-                                    loading={testingApi === api.id}
                                     onClick={() => testApiConnection(api.id)}
-                                    disabled={!api.is_enabled}
+                                    disabled={!api.is_enabled || testingApi === api.id}
                                   >
-                                    <SpeedIcon fontSize="small" />
-                                  </LoadingButton>
+                                    {testingApi === api.id ? <CircularProgress size={16} /> : <SpeedIcon fontSize="small" />}
+                                  </Button>
                                 </span>
                               </Tooltip>
                               
@@ -790,7 +788,7 @@ const APIConfigurationForm: React.FC<{
             InputProps={{
               endAdornment: (
                 <IconButton onClick={() => setViewCredentials(!viewCredentials)}>
-                  {viewCredentials ? <VisibilityOff /> : <ViewIcon />}
+                  {viewCredentials ? <HideIcon /> : <ViewIcon />}
                 </IconButton>
               )
             }}
@@ -861,13 +859,14 @@ const APIConfigurationForm: React.FC<{
         <Button onClick={() => onSave()}>
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
-          loading={saving}
+          disabled={saving}
           onClick={handleSave}
+          startIcon={saving ? <CircularProgress size={16} /> : undefined}
         >
           {api ? 'Update' : 'Create'}
-        </LoadingButton>
+        </Button>
       </Box>
     </Box>
   );

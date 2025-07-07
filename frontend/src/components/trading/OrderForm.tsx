@@ -51,7 +51,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   
   const { quotes } = useMarketStore();
-  const currentQuote = quotes[symbol] as MarketQuote | undefined;
+  const currentQuote = quotes[symbol];
 
   const {
     register,

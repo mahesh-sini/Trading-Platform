@@ -105,8 +105,12 @@ const TradingDashboard: React.FC<TradingDashboardProps> = ({ userId }) => {
 
   // WebSocket connection for real-time updates
   const webSocket = useWebSocket({
-    autoConnect: false, // Disable auto-connect for now to avoid connection errors
-    onConnect: () => {
+    autoConnect: false // Disable auto-connect for now to avoid connection errors
+  });
+
+  // Handle WebSocket connection and subscriptions
+  useEffect(() => {
+    if (webSocket.isConnected) {
       console.log('Trading dashboard WebSocket connected');
       // Subscribe to relevant channels when available
       if (webSocket.subscribe) {
@@ -116,7 +120,7 @@ const TradingDashboard: React.FC<TradingDashboardProps> = ({ userId }) => {
         webSocket.subscribeToSymbols([selectedSymbol, ...popularStocks.map(s => s.symbol)]);
       }
     }
-  });
+  }, [webSocket.isConnected, selectedSymbol, webSocket]);
 
   // Handle layout changes
   const handleLayoutChange = (layout: any, layouts: any) => {

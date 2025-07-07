@@ -18,6 +18,50 @@ A comprehensive AI-powered trading platform with automated trading, machine lear
 
 The platform follows a microservices architecture with the following components:
 
+### Core Services
+- **Frontend** (Port 3000): Next.js React application with TypeScript
+- **Backend API** (Port 8000): FastAPI main application server
+- **Data Service** (Port 8002): Market data ingestion and WebSocket streaming
+- **ML Service** (Port 8003): Machine learning predictions and model serving
+
+### Infrastructure
+- **PostgreSQL** (Port 5432): Primary relational database
+- **Redis** (Port 6379): Caching and session management
+- **InfluxDB** (Port 8086): Time-series market data storage
+
+## 🚀 Quick Start with Docker
+
+1. **Prerequisites**
+   ```bash
+   # Install Docker and Docker Compose
+   sudo apt install docker.io docker-compose
+   sudo systemctl start docker
+   ```
+
+2. **Start the Platform**
+   ```bash
+   # Clone the repository
+   git clone <repository-url>
+   cd "Trading Platform"
+   
+   # Start all services
+   chmod +x start-local.sh
+   ./start-local.sh
+   ```
+
+3. **Access the Application**
+   - **Frontend**: http://localhost:3000
+   - **Backend API**: http://localhost:8000/docs
+   - **Data Service**: http://localhost:8002/docs
+   - **ML Service**: http://localhost:8003/docs
+
+## 📚 Documentation
+
+- [Docker Setup Guide](./DOCKER_SETUP_GUIDE.md) - Complete Docker deployment guide
+- [API Documentation](./docs/API_SPEC.md) - REST API specifications
+- [Architecture Guide](./docs/ARCHITECTURE.md) - System architecture details
+- [Development Guide](./docs/DEPLOYMENT.md) - Development setup and workflow
+
 ### Backend Services
 - **Main API** (Port 8000): Core FastAPI application with authentication, trading, and portfolio management
 - **Data Service** (Port 8002): Market data ingestion and real-time data feeds

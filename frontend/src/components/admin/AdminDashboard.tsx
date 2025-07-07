@@ -461,7 +461,12 @@ const DashboardOverviewContent: React.FC<{ overview: DashboardOverview | null }>
                       outerRadius={80}
                       label
                     >
-                      {[].map((entry, index) => (
+                      {[
+                        { name: 'Free', value: 45, color: theme.palette.grey[400] },
+                        { name: 'Basic', value: 30, color: theme.palette.primary.main },
+                        { name: 'Pro', value: 20, color: theme.palette.success.main },
+                        { name: 'Enterprise', value: 5, color: theme.palette.warning.main }
+                      ].map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
