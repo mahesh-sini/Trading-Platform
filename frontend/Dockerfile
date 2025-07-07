@@ -1,5 +1,5 @@
 # Multi-stage build for Next.js frontend
-FROM node:18-alpine as builder
+FROM node:24-alpine as builder
 
 # Set working directory
 WORKDIR /app
@@ -20,7 +20,7 @@ RUN npm run build
 RUN mkdir -p /app/public
 
 # Production stage
-FROM node:18-alpine as production
+FROM node:24-alpine as production
 
 # Set environment variables
 ENV NODE_ENV=production \
