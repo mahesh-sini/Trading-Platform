@@ -1,5 +1,5 @@
 # Multi-stage build for Python backend
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -26,7 +26,7 @@ COPY --chown=app:app requirements.txt ./
 RUN pip install --user --no-cache-dir --timeout=300 --retries=3 -r requirements.txt
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.14-slim as production
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
