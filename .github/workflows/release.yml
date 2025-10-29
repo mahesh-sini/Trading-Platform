@@ -94,7 +94,7 @@ jobs:
         tar -czf trading-platform-deployment-${{ needs.validate-release.outputs.version }}.tar.gz release-package/
     
     - name: Upload release assets
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: release-assets
         path: |
