@@ -210,7 +210,7 @@ jobs:
         aws eks update-kubeconfig --name trading-platform-staging --region ${{ secrets.AWS_REGION }}
     
     - name: Install Helm
-      uses: azure/setup-helm@v3
+      uses: azure/setup-helm@v4
       with:
         version: '3.12.0'
     
@@ -266,7 +266,7 @@ jobs:
         aws eks update-kubeconfig --name trading-platform-production --region ${{ secrets.AWS_REGION }}
     
     - name: Install Helm
-      uses: azure/setup-helm@v3
+      uses: azure/setup-helm@v4
       with:
         version: '3.12.0'
     
