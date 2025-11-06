@@ -69,7 +69,8 @@ trading_platform.db
 *.db-journal
 
 # ML Models & Data
-models/
+ml_models/
+ml_service/models/
 data/
 datasets/
 bhav_copies/

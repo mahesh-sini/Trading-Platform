@@ -6,19 +6,20 @@ from sqlalchemy import pool
 from alembic import context
 
 # Add the backend directory to the path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
 
 # Import your models
 from models.base import Base
 from models.user import User
 from models.subscription import Subscription, SubscriptionPlan
-from models.broker import BrokerAccount
+from models.broker import Broker, BrokerAccount
 from models.trade import Trade, Order, Position
-from models.prediction import Prediction, ModelPerformance, PredictionRequest
-from models.portfolio import Portfolio, PortfolioHistory, PortfolioAllocation, RebalanceEvent
-from models.strategy import Strategy, StrategyPerformance, StrategySignal, StrategyBacktest
-from models.watchlist import Watchlist, WatchlistItem, WatchlistAlert, WatchlistTemplate, WatchlistShare
-from models.market_data import MarketData, NewsItem, EconomicIndicator, MarketHours, SymbolMetadata, SocialSentiment
+from models.prediction import Prediction, ModelPerformance
+from models.portfolio import Portfolio, PortfolioHistory
+from models.strategy import Strategy, StrategyPerformance
+from models.watchlist import Watchlist, WatchlistItem
+from models.market_data import MarketData, NewsItem
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
